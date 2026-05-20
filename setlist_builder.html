@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Undertool Setlist Builder - Drag & Drop and Reorder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    #container {
+      display: flex;
+      gap: 40px;
+    }
+
+    #songBox, #setlistTable {
+      width: 45%;
+      min-height: 300px;
+      border: 1px solid #000;
+      padding: 10px;
+    }
+
+    .song, .setlist-song {
+      padding: 5px;
+      margin: 5px 0;
+      background: #eee;
+      cursor: grab;
+    }
+
+    #totalTime {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    .drag-over {
+      border-top: 2px solid rgb(85, 21, 233);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>UndertoolSetlist Builder</h1>
+
+  <div id="container">
+    <div id="songBox">
+      <h2>Available Songs</h2>
+      <div class="song" draggable="true" data-name="Jerk-Off (Live)" data-duration="07:00">Jerk-Off Extended Live (07:00 min)</div>
+      <div class="song" draggable="true" data-name="Hush" data-duration="07:00">Hush (3:00 min)</div>
+      <div class="song" draggable="true" data-name="Sober" data-duration="05:00">Sober (05:00 min)</div>
+      <div class="song" draggable="true" data-name="Stinkfist" data-duration="05:15">Stinkfist (05:15 min)</div>
+      <div class="song" draggable="true" data-name="-H-" data-duration="06:00">-H- (06:00 min)</div>
+      <div class="song" draggable="true" data-name="Eulogy" data-duration="08:30">Eulogy (08:30 min)</div>
+      <div class="song" draggable="true" data-name="46 & 2" data-duration="06:00"> 46 & 2 (06:00 min)</div>
+      <div class="song" draggable="true" data-name="Pushit" data-duration="10:00">Pushit (10:00 min)</div>
+      <div class="song" draggable="true" data-name="Ænema" data-duration="06:45">Ænema (06:45 min)</div>
+      <div class="song" draggable="true" data-name="The Grudge" data-duration="08:30">The Grudge (08:30 min)</div>
+      <div class="song" draggable="true" data-name="Eon Blue/The Patient" data-duration="8:30">Eon Blue/The Patient (8:30 min)</div>
+      <div class="song" draggable="true" data-name="Schism" data-duration="07:00">Schism (07:00 min)</div>
+      <div class="song" draggable="true" data-name="Lateralus" data-duration="09:30">Lateralus (09:30 min)</div>
+      <div class="song" draggable="true" data-name="Holy Trinity" data-duration="26:30">Holy Trinity (26:30 min)</div>
+      <div class="song" draggable="true" data-name="Jambi" data-duration="07:30">Jambi (07:30 min)</div>
+      <div class="song" draggable="true" data-name="The Pot" data-duration="06:30">The Pot (06:30 min)</div>
+      <div class="song" draggable="true" data-name="Pneuma" data-duration="12:00">Pneuma (12:00 min)</div>
+      <div class="song" draggable="true" data-name="Descending" data-duration="13:45">Descending (13:45 min)</div>
+      <div class="song" draggable="true" data-name="Culling Voices" data-duration="10:00">Culling Voices (10:00 min)</div>
+    </div>
+
+    <div id="setlistTable">
+      <h2>Your Setlist</h2>
+    </div>
+  </div>
+
+  <div id="totalTime">
+    Total Time: 0 minutes
+  </div>
+
+  <script>
+    let totalTime = 0;
+    let draggedItem = null;
+
+    // Allow dragging from Available Songs
+    document.querySelectorAll('.song').forEach(song => {
+      song.addEventListener('dragstart', (e) => {
+        draggedItem = song.cloneNode(true); // Clone when dragging from Available Songs
+      });
+    });
+
+    // Make setlistTable droppable
+    const setlistTable = document.getElementById('setlistTable');
+
+    setlistTable.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      const afterElement = getDragAfterElement(setlistTable, e.clientY);
+      clearDragOverStyles();
+      if (afterElement) {
+        afterElement.classList.add('drag-over');
+      }
+    });
+
+    setlistTable.addEventListener('dragleave', clearDragOverStyles);
+
+    setlistTable.addEventListener('drop', (e) => {
+      e.preventDefault();
+      clearDragOverStyles();
+      if (draggedItem) {
+        const afterElement = getDragAfterElement(setlistTable, e.clientY);
+
+        // Events to make newly added items draggable too
+        draggedItem.classList.add('setlist-song');
+        draggedItem.addEventListener('dragstart', (e) => {
+          draggedItem = e.target;
+        });
+        draggedItem.addEventListener('click', function() {
+          totalTime -= parseInt(this.dataset.duration);
+          this.remove();
+          updateTotalTime();
+        });
+
+        if (afterElement == null) {
+          setlistTable.appendChild(draggedItem);
+        } else {
+          setlistTable.insertBefore(draggedItem, afterElement);
+        }
+
+        if (!draggedItem.dataset.added) {
+          totalTime += parseInt(draggedItem.dataset.duration);
+          draggedItem.dataset.added = "true"; // Mark as already counted
+          updateTotalTime();
+        }
+
+        draggedItem = null;
+      }
+    });
+
+    function getDragAfterElement(container, y) {
+      const draggableElements = [...container.querySelectorAll('.setlist-song')];
+
+      return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
+        } else {
+          return closest;
+        }
+      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    function clearDragOverStyles() {
+      document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    }
+
+    function updateTotalTime() {
+      document.getElementById('totalTime').textContent = `Total Time: ${totalTime} minutes`;
+    }
+  </script>
+
+</body>
+</html>
