@@ -41,7 +41,7 @@ Aucune installation nécessaire.
 ## Version en ligne (GitHub Pages)
 
 Le projet est accessible ici :  
-*(ajouter le lien une fois GitHub Pages activé)*
+*[(ajouter le lien une fois GitHub Pages activé)](https://salaam17.github.io/undertool-setlist/)*
 
 ---
 
